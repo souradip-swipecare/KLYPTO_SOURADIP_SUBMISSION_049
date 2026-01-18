@@ -421,7 +421,6 @@ grep -i "sharpe\|drawdown\|win" logs/trading_system.log
 
 ## 📞 Support
 
-- **Logs**: Check `logs/trading_system.log`
 - **Docs**: Read `README.md`
 - **Issues**: Check `PROJECT_REVIEW.md`
 - **Details**: See `SUBMISSION_SUMMARY.md`
