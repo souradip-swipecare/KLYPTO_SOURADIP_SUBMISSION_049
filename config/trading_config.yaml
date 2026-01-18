@@ -1,0 +1,232 @@
+# NIFTY 50 Algorithmic Trading System - Configuration
+# Professional Trading Configuration File
+
+# ============================================================================
+# MARKET CONFIGURATION
+# ============================================================================
+market:
+  symbol: "NIFTY"
+  exchange: "NSE"
+  asset_class: "INDEX"
+  base_currency: "INR"
+  trading_hours:
+    open: "09:15"
+    close: "15:30"
+  market_holidays: []
+
+# ============================================================================
+# DATA CONFIGURATION
+# ============================================================================
+data:
+  timeframe: "5min"
+  lookback_period: 1  # 1 year
+  data_sources:
+    spot: "yfinance"
+    futures: "synthetic"
+    options: "synthetic"
+  paths:
+    raw: "data/raw"
+    processed: "data/processed"
+    features: "data/features"
+
+# ============================================================================
+# FEATURE ENGINEERING CONFIGURATION
+# ============================================================================
+features:
+  technical_indicators:
+    ema_fast: 5
+    ema_slow: 15
+    atr_period: 14
+    
+  options_greeks:
+    risk_free_rate: 0.065  # 6.5%
+    time_to_expiry_days: 7
+    calculation_method: "black_scholes"
+  
+  derived_metrics:
+    - "iv"           # Implied Volatility
+    - "pcr"          # Put-Call Ratio
+    - "basis"        # Futures Basis
+    - "returns"      # Price Returns
+    - "delta_neutral_ratio"
+    - "gamma_exposure"
+
+# ============================================================================
+# REGIME DETECTION CONFIGURATION
+# ============================================================================
+regime_detection:
+  algorithm: "HMM"
+  n_states: 3
+  features:
+    - "iv"
+    - "basis"
+    - "returns"
+    - "pcr"
+  covariance_type: "diag"
+  max_iterations: 1000
+  random_state: 42
+  
+  regime_mapping:
+    high_return: 1      # Uptrend
+    medium_return: 0    # Sideways
+    low_return: -1      # Downtrend
+
+# ============================================================================
+# TRADING STRATEGY CONFIGURATION
+# ============================================================================
+strategy:
+  name: "EMA_Crossover_With_Regime_Filter"
+  type: "mean_reversion"
+  entry_rules:
+    long:
+      - "ema_fast > ema_slow"
+      - "regime == 1"
+    short:
+      - "ema_fast < ema_slow"
+      - "regime == -1"
+  
+  exit_rules:
+    long: "ema_fast < ema_slow"
+    short: "ema_fast > ema_slow"
+  
+  position_sizing:
+    method: "fixed"
+    size: 1  # 1 lot
+    max_position: 1
+  
+  no_trade_conditions:
+    - "regime == 0"  # Sideways
+    - "iv > iv_threshold"
+
+# ============================================================================
+# BACKTEST CONFIGURATION
+# ============================================================================
+backtest:
+  initial_capital: 100000  # $100,000 or ₹100,000
+  commission: 0.0  # 0% commission (for demo)
+  slippage: 0.0    # 0% slippage (for demo)
+  
+  period_split:
+    train: 0.70
+    test: 0.30
+  
+  performance_metrics:
+    - "total_return"
+    - "sharpe_ratio"
+    - "sortino_ratio"
+    - "calmar_ratio"
+    - "max_drawdown"
+    - "win_rate"
+    - "profit_factor"
+    - "avg_trade_duration"
+  
+  risk_limits:
+    max_daily_loss: 0.02  # 2% of capital
+    max_position_loss: 0.01  # 1% per position
+    max_drawdown_allowed: 0.10  # 10%
+
+# ============================================================================
+# MACHINE LEARNING CONFIGURATION
+# ============================================================================
+ml_models:
+  model_a:
+    name: "Gradient Boosting Classifier"
+    type: "tree"
+    hyperparameters:
+      n_estimators: 100
+      max_depth: 3
+      learning_rate: 0.1
+      random_state: 42
+    
+  model_b:
+    name: "Random Forest Classifier"
+    type: "ensemble"
+    hyperparameters:
+      n_estimators: 100
+      max_depth: 10
+      n_jobs: -1
+      random_state: 42
+  
+  training:
+    target: "profitable_trade"  # Binary classification
+    features_to_use: "all_engineered"
+    validation_method: "time_series_cv"
+    test_size: 0.30
+    prediction_threshold: 0.5
+
+# ============================================================================
+# OUTLIER DETECTION CONFIGURATION
+# ============================================================================
+outlier_detection:
+  method: "z_score"
+  threshold: 3.0  # 3-sigma
+  features_to_analyze:
+    - "pnl"
+    - "duration"
+    - "iv"
+    - "vega"
+    - "regime"
+
+# ============================================================================
+# LOGGING & MONITORING
+# ============================================================================
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  log_file: "logs/trading_system.log"
+  backup_logs: true
+  max_log_size_mb: 50
+
+monitoring:
+  enabled: true
+  metrics_check_interval: 60  # seconds
+  alert_on_unusual_activity: true
+  email_alerts: false
+
+# ============================================================================
+# REPORTING CONFIGURATION
+# ============================================================================
+reporting:
+  generate_daily_report: true
+  generate_weekly_summary: true
+  generate_monthly_performance: true
+  report_format: "pdf"
+  output_path: "reports"
+  
+  sections:
+    - "executive_summary"
+    - "performance_metrics"
+    - "trade_analysis"
+    - "risk_analysis"
+    - "regime_analysis"
+    - "outlier_analysis"
+    - "recommendations"
+
+# ============================================================================
+# VISUALIZATION CONFIGURATION
+# ============================================================================
+visualization:
+  style: "seaborn"
+  theme: "darkgrid"
+  dpi: 150
+  figsize: [14, 6]
+  
+  plots_to_generate:
+    - "regime_chart"
+    - "equity_curve"
+    - "drawdown_chart"
+    - "pnl_distribution"
+    - "win_loss_scatter"
+    - "correlation_heatmap"
+    - "regime_transitions"
+    - "feature_importance"
+
+# ============================================================================
+# SYSTEM CONFIGURATION
+# ============================================================================
+system:
+  max_workers: 4
+  data_cache: true
+  cache_expiry_hours: 24
+  verbose: true
+  debug_mode: false
